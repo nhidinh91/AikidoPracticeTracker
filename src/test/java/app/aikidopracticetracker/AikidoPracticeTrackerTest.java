@@ -63,25 +63,41 @@ class AikidoPracticeTrackerTest {
         assertTrue(output.contains("Total Training Time: 0 hours 0 minutes"));
     }
 
-    @Test
-    void testCheckGraduationEligibility_NotEligible() {
-        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 600)); // 10 hours
-
-        AikidoPracticeTracker.checkGraduationEligibility();
-        String output = outputStream.toString();
-
-        assertTrue(output.contains("You need"), "Should indicate missing hours for eligibility");
-    }
 
     @Test
-    void testCheckGraduationEligibility_Eligible() {
-        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 600)); // 10 hours
-        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 21), 600)); // 10 hours
+    void testCheckGraduationEligibility() {
+        for (int i = 0; i < 100; i++) {
+            sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 2));
+        }
 
         AikidoPracticeTracker.checkGraduationEligibility();
         String output = outputStream.toString();
 
         assertTrue(output.contains("Congratulations! You are eligible for Kyu graduation."));
+
+        sessions.clear();
+        AikidoPracticeTracker.checkGraduationEligibility();
+        String output2 = outputStream.toString();
+        assertTrue(output2.contains("No sessions recorded. Start training first!"));
+
+        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 1200));
+        AikidoPracticeTracker.checkGraduationEligibility();
+        String output3 = outputStream.toString();
+        assertTrue(output3.contains("Congratulations! You are eligible for Kyu graduation."));
+
+        sessions.clear();
+        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 600));
+        AikidoPracticeTracker.checkGraduationEligibility();
+        String output4 = outputStream.toString();
+        assertTrue(output4.contains("Not yet eligible for Kyu graduation."));
+
+        sessions.clear();
+        sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 100));
+        sessions.add(new PracticeSession(LocalDate.of(2025, 8, 21), 100));
+        AikidoPracticeTracker.checkGraduationEligibility();
+        String output5 = outputStream.toString();
+        assertTrue(output5.contains("Congratulations! You are eligible for Kyu graduation."));
+
     }
 
     @Test

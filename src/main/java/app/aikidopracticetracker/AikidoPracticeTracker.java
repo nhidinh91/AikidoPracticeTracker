@@ -5,19 +5,24 @@ import java.io.FileWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class AikidoPracticeTracker {
     private static final String FILE_NAME = "sessions.txt";
+
     private static final int KYU_ELIGIBILITY_MINUTES = 1200;
+    private static final int KYU_SESSION_COUNT = 100;
+    private static final int KYU_DURATION_MONTHS = 6;
+
     private static final List<PracticeSession> sessions = new ArrayList<>();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
 
     public static void main(String[] args) {
-        loadSessions(FILE_NAME); // Load saved sessions from file
+        loadSessions(FILE_NAME);
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.println("\n===== Aikido Practice Tracker =====");
@@ -28,7 +33,7 @@ public class AikidoPracticeTracker {
             System.out.print("Choose an option: ");
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine();
 
             switch (choice) {
                 case 1:
@@ -81,14 +86,24 @@ public class AikidoPracticeTracker {
     }
 
     public static void checkGraduationEligibility() {
+        if (sessions.isEmpty()) {
+            System.out.println("No sessions recorded. Start training first!");
+            return;
+        }
+
         int totalMinutes = sessions.stream().mapToInt(PracticeSession::getDuration).sum();
-        if (totalMinutes >= KYU_ELIGIBILITY_MINUTES) {
+        LocalDate firstSessionDate = sessions.getFirst().getDate();
+        LocalDate latestSessionDate = sessions.getLast().getDate();
+        long monthsSinceFirstSession = ChronoUnit.MONTHS.between(firstSessionDate, latestSessionDate);
+
+        boolean meetsSessionRequirement = sessions.size() >= KYU_SESSION_COUNT;
+        boolean meetsTimeRequirement = monthsSinceFirstSession >= KYU_DURATION_MONTHS;
+        boolean meetsMinutesRequirement = totalMinutes >= KYU_ELIGIBILITY_MINUTES;
+
+        if (meetsMinutesRequirement || meetsSessionRequirement || meetsTimeRequirement) {
             System.out.println("Congratulations! You are eligible for Kyu graduation.");
         } else {
-            int totalRemainingMinutes = KYU_ELIGIBILITY_MINUTES - totalMinutes;
-            int remainingHours = totalRemainingMinutes / 60;
-            int remainingMinutes = totalRemainingMinutes - remainingHours * 60;
-            System.out.println("You need " + remainingHours + " hours" + " and " + remainingMinutes + " minutes" + " more to be eligible.");
+            System.out.println("Not yet eligible for Kyu graduation.");
         }
     }
 
