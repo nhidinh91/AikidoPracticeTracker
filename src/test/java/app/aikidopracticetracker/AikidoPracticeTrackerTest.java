@@ -13,16 +13,16 @@ class AikidoPracticeTrackerTest {
     private final PrintStream originalOut = System.out;
     private final List<PracticeSession> sessions = AikidoPracticeTracker.getSessions();
     private static final String FILE_NAME = "sessions.txt";
-
-
+    private final InputStream originalIn = System.in;
     @BeforeEach
     void setUp() {
         System.setOut(new PrintStream(outputStream)); // Redirect System.out
-        sessions.clear(); // Clear sessions before each test
+        sessions.clear();
     }
 
     @AfterEach
     void tearDown() {
+        System.setIn(originalIn);   // Restore System.in
         System.setOut(originalOut); // Restore System.out
     }
 
@@ -86,18 +86,14 @@ class AikidoPracticeTrackerTest {
 
     @Test
     void testSaveAndLoadSessions() throws IOException {
-        // Prepare test data
         sessions.add(new PracticeSession(LocalDate.of(2025, 2, 20), 90));
         sessions.add(new PracticeSession(LocalDate.of(2025, 2, 21), 120));
 
-        // Save sessions
         AikidoPracticeTracker.saveSessions(FILE_NAME);
 
-        // Clear and reload from file
         sessions.clear();
         AikidoPracticeTracker.loadSessions(FILE_NAME);
 
-        // Verify data persistence
         assertEquals(2, sessions.size());
         assertEquals(90, sessions.get(0).getDuration());
         assertEquals(120, sessions.get(1).getDuration());
@@ -127,4 +123,30 @@ class AikidoPracticeTrackerTest {
     void testGetSessions() {
         assertNotNull(sessions);
     }
+
+    @Test
+    void testMainMenuOption1_AddPracticeSession() {
+        String simulatedInput = "1\n60\n4\n";
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+
+        AikidoPracticeTracker.main(new String[]{});
+
+        String consoleOutput = outputStream.toString();
+        assertTrue(consoleOutput.contains("===== Aikido Practice Tracker ====="));
+        assertTrue(consoleOutput.contains("Add Practice Session"));
+        assertTrue(consoleOutput.contains("Exiting. See you in the next practice!"));
+    }
+
+    @Test
+    void testMainMenuOption2_ViewTotalPracticeTime() {
+        String simulatedInput = "2\n4\n";
+        System.setIn(new ByteArrayInputStream(simulatedInput.getBytes()));
+
+        AikidoPracticeTracker.main(new String[]{});
+
+        String consoleOutput = outputStream.toString();
+        assertTrue(consoleOutput.contains("View Total Practice Time"));
+        assertTrue(consoleOutput.contains("Exiting. See you in the next practice!"));
+    }
+
 }
